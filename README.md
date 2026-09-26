@@ -4,7 +4,7 @@ Imaq helps a household in Inukjuak, Nunavik, know three things about its trucked
 
 - **Is it safe to drink?** A 3-step chlorine test-strip check gives a clear result: *Safe to drink*, *Check your water* or *Don't drink*.
 - **How long will it last?** The tank level is shown as *days of water left*, forecast from the household's own usage pattern.
-- **How do we use it?** Daily, weekday and hour-of-day trends, plus plain-language insights such as the busiest day, peak hours, a leak check and how often the tank ran low.
+- **How do we use it?** A daily usage chart, plus plain-language insights such as the busiest day, peak hours, a leak check and how often the tank ran low.
 
 When the live Open-Meteo forecast shows a blizzard, the app works out how much water the household can use each day so the tank lasts until trucks can run again.
 
