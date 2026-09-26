@@ -1,6 +1,7 @@
-// Offline-first service worker: app shell is cached on install, everything else
-// is served cache-first with a network refresh. Weather calls go network-first.
-const CACHE = 'imaq-v1'
+// Offline service worker: the app shell is cached on install. Pages and weather
+// go network-first (fresh when online, cached when not); hashed assets go
+// cache-first with a background refresh.
+const CACHE = 'imaq-v2'
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './icon.svg', './manifest.webmanifest'])))
   self.skipWaiting()
@@ -13,7 +14,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request
   if (req.method !== 'GET') return
   const url = new URL(req.url)
-  if (url.hostname === 'api.open-meteo.com') {
+  // Pages and weather: network first so updates show at once, cache when offline.
+  if (req.mode === 'navigate' || url.hostname === 'api.open-meteo.com') {
     e.respondWith(fetch(req).then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); return res }).catch(() => caches.match(req)))
     return
   }
