@@ -18,7 +18,8 @@
       // Apply saved theme + text size before paint (no flash).
       try {
         var s = JSON.parse(localStorage.getItem('imaq:prefs') || '{}');
-        var dark = s.theme === 'dark' || (s.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        // Light is the default; dark only when chosen (or "match phone" on a dark phone).
+        var dark = s.v === 2 && (s.theme === 'dark' || (s.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches));
         if (dark) document.documentElement.classList.add('dark');
         if (s.textSize) document.documentElement.dataset.text = s.textSize;
         if (s.lang) document.documentElement.lang = s.lang === 'iu' ? 'iu-Cans' : s.lang;

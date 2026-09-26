@@ -26,6 +26,10 @@
   --brand-foreground: #ffffff;
   --destructive: #c81e1e;
   --destructive-foreground: #ffffff;
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --warning: #a16207;
+  --warning-foreground: #ffffff;
   --radius: 0.75rem;
 }
 
@@ -47,6 +51,10 @@
   --brand-foreground: #09090b;
   --destructive: #fecaca;
   --destructive-foreground: #09090b;
+  --success: #86efac;
+  --success-foreground: #09090b;
+  --warning: #fcd34d;
+  --warning-foreground: #09090b;
 }
 
 @theme inline {
@@ -67,6 +75,10 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: 'Inter', 'Noto Sans Canadian Aboriginal', 'Euphemia UCAS', system-ui, sans-serif;

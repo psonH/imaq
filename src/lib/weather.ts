@@ -9,10 +9,23 @@ import { HOUR } from './sim'
 export const INUKJUAK = { lat: 58.4533, lon: -78.1083 }
 
 export type StormWindow = { start: number; end: number; maxGust: number }
+export type Sky = 'clear' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'storm'
+export type Current = { tempC: number; windKmh: number; sky: Sky }
 export type WeatherState = {
   fetchedAt: number | null
   storm: StormWindow | null
+  current: Current | null
   source: 'live' | 'cached' | 'demo' | 'unavailable'
+}
+
+// WMO weather codes (used by Open-Meteo) grouped into a few plain words.
+export function skyFromCode(code: number): Sky {
+  if (code === 0) return 'clear'
+  if (code <= 3) return 'cloudy'
+  if (code === 45 || code === 48) return 'fog'
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow'
+  if (code >= 95) return 'storm'
+  return 'rain'
 }
 
 const CACHE_KEY = 'imaq:weather'
@@ -51,13 +64,15 @@ export function findStorm(h: Hourly): StormWindow | null {
 export async function loadWeather(): Promise<WeatherState> {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${INUKJUAK.lat}&longitude=${INUKJUAK.lon}` +
-    `&hourly=wind_speed_10m,wind_gusts_10m,snowfall,visibility&forecast_days=3&timeformat=unixtime&wind_speed_unit=kmh`
+    `&current=temperature_2m,wind_speed_10m,weather_code&hourly=wind_speed_10m,wind_gusts_10m,snowfall,visibility&forecast_days=3&timeformat=unixtime&wind_speed_unit=kmh`
   try {
     const res = await fetch(url)
     if (!res.ok) throw new Error(String(res.status))
-    const json = (await res.json()) as { hourly: Hourly }
+    const json = (await res.json()) as { hourly: Hourly; current?: { temperature_2m: number; wind_speed_10m: number; weather_code: number } }
     const now = Date.now()
-    const state: WeatherState = { fetchedAt: now, storm: findStorm(json.hourly), source: 'live' }
+    const c = json.current
+    const current = c ? { tempC: Math.round(c.temperature_2m), windKmh: Math.round(c.wind_speed_10m), sky: skyFromCode(c.weather_code) } : null
+    const state: WeatherState = { fetchedAt: now, storm: findStorm(json.hourly), current, source: 'live' }
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify(state))
     } catch {}
@@ -67,7 +82,7 @@ export async function loadWeather(): Promise<WeatherState> {
       const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null') as WeatherState | null
       if (cached) return { ...cached, source: 'cached' }
     } catch {}
-    return { fetchedAt: null, storm: null, source: 'unavailable' }
+    return { fetchedAt: null, storm: null, current: null, source: 'unavailable' }
   }
 }
 

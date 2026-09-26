@@ -8,7 +8,7 @@ Imaq helps a household in Inukjuak, Nunavik, know three things about its trucked
 
 When the live Open-Meteo forecast shows a blizzard, the app works out how much water the household can use each day so the tank lasts until trucks can run again.
 
-Home always shows one **next step** in plain words, such as "Test your water today" or "Truck booked for Mon 08:00", with the button to do it.
+Home opens with a row of status pills: water quality, water level, water dispatch and weather. Each pill pairs colour (green, amber, red) with an icon shape and words, and tapping it opens the detail. Below the pills are two cards: current water level and contamination level (free chlorine against the safe range). On desktop, a sidebar holds the navigation and a **Request water tank** button. Weather is checked automatically (Open-Meteo, every 30 minutes) and shown only as a status.
 
 ## Deliveries and the water plant
 

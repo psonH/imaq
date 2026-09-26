@@ -7,7 +7,15 @@ import { DAY, HOUR } from './sim'
 export type Theme = 'light' | 'dark' | 'auto'
 export type TextSize = 'md' | 'lg' | 'xl'
 
-type Prefs = { lang: Lang; theme: Theme; textSize: TextSize; onboarded: boolean; notify: boolean }
+type Prefs = { v: 2; lang: Lang; theme: Theme; textSize: TextSize; onboarded: boolean; notify: boolean }
+
+const DEFAULT_PREFS: Prefs = { v: 2, lang: 'en', theme: 'light', textSize: 'md', onboarded: false, notify: false }
+
+// Light is the default. Prefs saved before v2 defaulted to "match phone", so move them to light once.
+function readPrefs(): Prefs {
+  const p = read<Prefs>(PREFS_KEY, DEFAULT_PREFS)
+  return p.v === 2 ? p : { ...p, v: 2, theme: 'light' }
+}
 
 type Data = {
   house: string
@@ -92,7 +100,7 @@ const StoreCtx = createContext<Ctx | null>(null)
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [clock, setClock] = useState(() => Date.now())
   const [online, setOnline] = useState(() => navigator.onLine)
-  const [prefs, setPrefsState] = useState<Prefs>(() => read(PREFS_KEY, { lang: 'en', theme: 'auto', textSize: 'md', onboarded: false, notify: false }))
+  const [prefs, setPrefsState] = useState<Prefs>(readPrefs)
   const [data, setDataState] = useState<Data>(() => read(DATA_KEY, defaultData(Date.now())))
   const [shared, setSharedState] = useState<Shared>(() => read(SHARED_KEY, defaultShared(Date.now())))
 

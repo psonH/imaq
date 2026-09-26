@@ -2,7 +2,7 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight, Lightbulb, Table2, BarChart3 
 import { useMemo, useState } from 'react'
 import { BarChart } from '../components/BarChart'
 import { Button } from '../components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Segmented } from '../components/ui/segmented'
 import { fmtDay, fmtHour, fmtNum, fmtWeekday } from '../lib/format'
 import { hourPattern, lowEvents, startOfDay, weekdayPattern } from '../lib/sim'
@@ -147,47 +147,6 @@ export function Usage({ water }: { water: Water }) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card aria-labelledby="weekday-title">
-          <CardHeader>
-            <CardTitle id="weekday-title">{t('usage.weekday')}</CardTitle>
-            <CardDescription>{t('usage.days', { n: 28 })}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BarChart
-              unit="L"
-              height="h-36"
-              highlight={[busiest]}
-              highlightLabel={`${t('usage.busiest')}: ${fmtWeekday(busiest, locale)}`}
-              summary={weekday.map((v, i) => `${fmtWeekday(i, locale)} ${fmtNum(v, locale)} L`).join(', ')}
-              bars={[1, 2, 3, 4, 5, 6, 0].map((i) => ({
-                key: i,
-                label: fmtWeekday(i, locale, 'short'),
-                value: weekday[i],
-                title: `${fmtWeekday(i, locale)}: ${fmtNum(weekday[i], locale)} L`,
-              }))}
-            />
-          </CardContent>
-        </Card>
-
-        <Card aria-labelledby="hours-title">
-          <CardHeader>
-            <CardTitle id="hours-title">{t('usage.hours')}</CardTitle>
-            <CardDescription>{t('usage.days', { n: 14 })}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BarChart
-              unit="L"
-              height="h-36"
-              labelEvery={6}
-              highlight={peaks}
-              highlightLabel={peaks.map(fmtHour).join(' · ')}
-              summary={t('insight.peak', { h1: fmtHour(peaks[0]), h2: fmtHour(peaks[1]) })}
-              bars={hours.map((v, h) => ({ key: h, label: fmtHour(h), value: v, title: `${fmtHour(h)}: ${fmtNum(v, locale)} L` }))}
-            />
-          </CardContent>
-        </Card>
-      </div>
 
       <Card aria-labelledby="insights-title">
         <CardHeader className="flex-row items-center gap-3">
