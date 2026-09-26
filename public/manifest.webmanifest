@@ -1,0 +1,11 @@
+{
+  "name": "Imaq · Household water",
+  "short_name": "Imaq",
+  "description": "Water quality, tank level and usage for your home.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1670c9",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

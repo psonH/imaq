@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+
+/*
+ * Theme tokens, following the 2one DLS contract: grayscale structure, one brand
+ * accent (2one Blue, APCA-safe steps #1670c9 light / #7cc4ff dark), a solid
+ * destructive, light + dark. Components use these through Tailwind utilities
+ * only — no hex in components.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525b;
+  --border: #dcdce0;
+  --input: #dcdce0;
+  --ring: #1670c9;
+  --primary: #09090b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+  --brand: #1670c9;
+  --brand-foreground: #ffffff;
+  --destructive: #c81e1e;
+  --destructive-foreground: #ffffff;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #141417;
+  --card-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #c2c2c8;
+  --border: #606069;
+  --input: #606069;
+  --ring: #7cc4ff;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --brand: #7cc4ff;
+  --brand-foreground: #09090b;
+  --destructive: #fecaca;
+  --destructive-foreground: #09090b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: 'Inter', 'Noto Sans Canadian Aboriginal', 'Euphemia UCAS', system-ui, sans-serif;
+  --font-heading: 'Satoshi', 'Inter', 'Noto Sans Canadian Aboriginal', 'Euphemia UCAS', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  /* User-controlled text size (Settings → Text size). Everything is rem-based. */
+  html[data-text='lg'] {
+    font-size: 112.5%;
+  }
+  html[data-text='xl'] {
+    font-size: 125%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    min-height: 100dvh;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+  }
+  /* Syllabics read better slightly larger and never letter-spaced. */
+  :lang(iu-Cans) {
+    letter-spacing: 0;
+  }
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
