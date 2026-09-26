@@ -193,9 +193,15 @@ export function recommend(p: PlanDay[], trucks: Truck[], plantCfg: Plant, shiftM
   return advice
 }
 
-/** Deliver-by date for a request: its due day, skipping no-service and high-risk days. */
+/**
+ * Deliver-by date for a request: its due day, skipping no-service and high-risk
+ * days. A home already late on a day with no trucks gets the next day they run.
+ */
 export function deliverBy(h: Pick<Home, 'level' | 'capacity' | 'perDay'>, days: Day[]) {
-  return days[dueDay(h, days)]?.date ?? days[0].date
+  const d = dueDay(h, days)
+  if (shiftFactor(days[d].risk) > 0) return days[d].date
+  const next = days.findIndex((x) => shiftFactor(x.risk) > 0)
+  return days[next >= 0 ? next : d].date
 }
 
 /** Daily delivery risk from forecast weather (thresholds from the plant brief). */

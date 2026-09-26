@@ -51,3 +51,9 @@ test('the plan never delivers more than homes need', () => {
     for (const s of stops) assert.ok(s.litres <= s.home.capacity - s.home.level + 1)
   }
 })
+
+test('a late home on a no-service day gets the next service day', () => {
+  const h = { capacity: 1800, level: 100, perDay: 400 } // already below reserve
+  const ds = days(['none', 'low', 'low'])
+  assert.equal(deliverBy(h, ds), ds[1].date)
+})
