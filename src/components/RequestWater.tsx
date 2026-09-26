@@ -33,7 +33,12 @@ export function RequestWater({ water, className }: { water: Water; className?: s
           <p className="text-sm font-semibold">{t('del.water')}</p>
           <Timeline status={open.status} />
           <p className="font-bold">{t(`st.${open.status}` as Key)}</p>
-          {open.eta && open.status !== 'delivered' && <p className="text-sm">{t('del.eta', { time: fmtDateTime(open.eta, locale) })}</p>}
+          {open.eta && open.status !== 'delivered' && (
+            <p className="text-sm">
+              {t('del.eta', { time: fmtDateTime(open.eta, locale) })}
+              {open.truck ? ` · ${t('del.truck', { truck: open.truck })}` : ''}
+            </p>
+          )}
         </div>
       )}
     </div>

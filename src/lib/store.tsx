@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { HTML_LANG, LOCALE, translate, type Key, type Lang } from './i18n'
 import { seedChecks, type QualityCheck } from './quality'
-import { isOpen, MY_HOUSE_DEFAULT, newId, seedOtherRequests, type Need, type Req, type ReqStatus } from './requests'
+import { isOpen, MY_HOUSE_DEFAULT, newId, seedRequests, type Need, type Req, type ReqStatus } from './requests'
 import { DAY, HOUR } from './sim'
 
 export type TextSize = 'md' | 'lg' | 'xl'
@@ -71,10 +71,10 @@ function defaultData(now: number): Data {
 }
 
 function defaultShared(now: number): Shared {
-  return { requests: seedOtherRequests(now), deliveries: [], pumpOuts: [] }
+  return { requests: seedRequests(now), deliveries: [], pumpOuts: [] }
 }
 
-type NewReq = Pick<Req, 'type' | 'auto' | 'reason' | 'daysLeft'>
+type NewReq = Pick<Req, 'type' | 'auto' | 'reason' | 'daysLeft'> & Partial<Pick<Req, 'litresLeft' | 'perDay' | 'source'>>
 
 type Ctx = Prefs &
   Data &
@@ -87,7 +87,8 @@ type Ctx = Prefs &
     setData: (d: Partial<Data>) => void
     addCheck: (c: QualityCheck) => void
     requestDelivery: (r: NewReq) => Req
-    setRequestStatus: (id: string, status: ReqStatus, eta?: number) => void
+    setRequestStatus: (id: string, status: ReqStatus, eta?: number, truck?: string) => void
+    addRequest: (r: Req) => void
     skipAhead: (hours: number) => void
     reset: () => void
   }
@@ -164,6 +165,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         id: newId(),
         house: data.house,
         status: navigator.onLine ? 'sent' : 'queued',
+        source: r.source ?? 'app',
+        capacity: data.tankL,
         createdAt: now,
         updatedAt: now,
         people: data.people,
@@ -172,18 +175,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSharedState((s) => ({ ...s, requests: [...s.requests, req] }))
       return req
     },
-    [data.house, data.people, data.needs, now],
+    [data.house, data.people, data.needs, data.tankL, now],
   )
 
   const setRequestStatus = useCallback(
-    (id: string, status: ReqStatus, eta?: number) => {
+    (id: string, status: ReqStatus, eta?: number, truck?: string) => {
       setSharedState((s) => {
         const req = s.requests.find((r) => r.id === id)
         if (!req) return s
         const mine = req.house === data.house
         const delivered = status === 'delivered' && mine
         return {
-          requests: s.requests.map((r) => (r.id === id ? { ...r, status, updatedAt: now, eta: eta ?? r.eta } : r)),
+          requests: s.requests.map((r) =>
+            r.id === id ? { ...r, status, updatedAt: now, eta: eta ?? r.eta, truck: truck ?? r.truck, deliveredAt: status === 'delivered' ? now : r.deliveredAt } : r,
+          ),
           deliveries: delivered && req.type === 'water' ? [...s.deliveries, now] : s.deliveries,
           pumpOuts: delivered && req.type === 'sewage' ? [...s.pumpOuts, now] : s.pumpOuts,
         }
@@ -194,6 +199,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Demo: jump the clock forward. The sample homes in the plant queue move with
   // it, so their waiting times stay realistic.
+  const addRequest = useCallback((r: Req) => setSharedState((s) => ({ ...s, requests: [...s.requests, r] })), [])
+
   const skipAhead = useCallback((hours: number) => {
     setDataState((s) => ({ ...s, demoOffsetH: s.demoOffsetH + hours }))
     setSharedState((s) => ({
@@ -224,10 +231,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       addCheck,
       requestDelivery,
       setRequestStatus,
+      addRequest,
       skipAhead,
       reset,
     }),
-    [prefs, data, shared, now, online, setPrefs, setData, addCheck, requestDelivery, setRequestStatus, skipAhead, reset],
+    [prefs, data, shared, now, online, setPrefs, setData, addCheck, requestDelivery, setRequestStatus, addRequest, skipAhead, reset],
   )
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>

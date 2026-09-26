@@ -89,7 +89,7 @@ function Summary({ water, weather, go }: { water: Water; weather: WeatherState; 
       : openWater.status === 'sent'
         ? ['check', t('news.received')]
         : openWater.status === 'scheduled'
-          ? ['safe', t('news.booked', { time: openWater.eta ? fmtDateTime(openWater.eta, locale) : '' })]
+          ? ['safe', t('news.booked', { time: openWater.eta ? fmtDateTime(openWater.eta, locale) : '', truck: openWater.truck ?? '' })]
           : ['safe', t('news.onTheWay')]
     : delivered
       ? ['safe', t('news.delivered', { time: fmtDateTime(delivered.updatedAt, locale) })]

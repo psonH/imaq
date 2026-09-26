@@ -95,3 +95,50 @@ export function demoStorm(start: number): StormWindow {
 export function demoStormStart(now: number) {
   return Math.ceil((now + 6 * HOUR) / HOUR) * HOUR
 }
+
+// Daily forecast for the plant's 7-day delivery plan. Falls back to the last
+// saved forecast, then to typical weather for the month, and says which it is.
+export type DailyWx = { date: number; gustMax: number; windMax: number; snowCm: number; tempMin: number; rainMm: number }
+export type DailyState = { days: DailyWx[]; source: 'live' | 'cached' | 'typical'; fetchedAt: number | null }
+
+const DAILY_KEY = 'imaq:weather-daily'
+
+export async function loadDaily(): Promise<DailyState> {
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${INUKJUAK.lat}&longitude=${INUKJUAK.lon}` +
+    `&daily=wind_gusts_10m_max,wind_speed_10m_max,snowfall_sum,temperature_2m_min,rain_sum&forecast_days=14&timezone=America%2FToronto&timeformat=unixtime`
+  try {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(String(res.status))
+    const d = (await res.json()).daily as Record<string, number[]>
+    const days = d.time.map((t, i) => ({
+      date: t * 1000,
+      gustMax: d.wind_gusts_10m_max[i] ?? 0,
+      windMax: d.wind_speed_10m_max[i] ?? 0,
+      snowCm: d.snowfall_sum[i] ?? 0,
+      tempMin: d.temperature_2m_min[i] ?? 0,
+      rainMm: d.rain_sum[i] ?? 0,
+    }))
+    const state: DailyState = { days, source: 'live', fetchedAt: Date.now() }
+    try {
+      localStorage.setItem(DAILY_KEY, JSON.stringify(state))
+    } catch {}
+    return state
+  } catch {
+    try {
+      const cached = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null') as DailyState | null
+      if (cached) return { ...cached, source: 'cached' }
+    } catch {}
+    return { days: [], source: 'typical', fetchedAt: null }
+  }
+}
+
+// Rough monthly normals for Inukjuak (min °C, typical gust km/h), used only when
+// no forecast is available.
+const TYPICAL = [
+  [-29, 45], [-30, 45], [-26, 45], [-17, 45], [-6, 40], [1, 35], [5, 35], [6, 35], [3, 40], [-3, 45], [-12, 50], [-23, 50],
+]
+export function typicalDay(date: number): DailyWx {
+  const [tempMin, gust] = TYPICAL[new Date(date).getMonth()]
+  return { date, gustMax: gust, windMax: gust * 0.6, snowCm: 0, tempMin, rainMm: 0 }
+}

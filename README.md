@@ -15,8 +15,26 @@ Home opens with a row of status pills: water quality, water level, water dispatc
 - **Automatic requests:** when water drops below the household's alert level, a blizzard would outlast the tank, or the sewage tank is nearly full, the app asks the water plant for a truck by itself. Households can also request one with a single tap.
 - **Request tracking:** each request shows its progress (Asked → Truck booked → On the way → Done). Optional phone notifications report each change.
 - **Offline:** requests wait in an outbox and send when the connection returns. There's also a one-tap text-message fallback.
-- **Water-plant view (`#plant`):** requests from all homes, sorted by a transparent priority score. The score counts days left, household size, priority needs (elder, baby, medical), a coming storm and waiting time, and every point shows its reason.
-- **Council report:** the plant view can export an anonymised CSV of requests and wait times, as evidence for pipeline funding.
+- **Water-plant view (`#plant`), Requests:** an Open/Delivered filter and a table of requests. Each row shows the house (app, phone or sample source icon), when it was requested, water left now, the deliver-by date (skipping no-service and high-risk days) and a status badge, with **Mark delivered** and **Cancel** (with confirmation). **Add a phone request** logs calls, and **CSV** exports an anonymised report for council and funding requests.
+- **Water-plant view, Delivery plan:**
+  - "What needs attention" recommendations, and a switch per truck (in service or maintenance).
+  - Tabs for the next 7 days, each with its delivery risk from the Open-Meteo daily forecast. The forecast falls back to the last saved one, then to typical weather for the month, and says which is showing.
+  - The homes the plan can't reach, and a card per truck with time used and stops grouped by load. Each stop has a "why" badge: requested, below reserve, before bad weather, or predicted.
+  - **Confirm this day's plan** books a truck and time for each household with a request, and the household app shows "Plant booked truck W-n for <date>". **Print route sheets** prints one sheet per truck.
+
+### How the planner works (`src/lib/planner.ts`, tested in `tests/planner.test.ts`)
+
+- **Due day:** each home's due day is the last day trucks run (low risk = full shift, medium = 70 %, high or no service = none) on or before the day its tank reaches the 20 % reserve.
+- **Who is served:** each day serves homes due today or tomorrow, plus open requests under 85 % full. Earliest due goes first, then requests, then the lowest tank.
+- **Truck assignment:** each stop goes to the truck with the most shift time left. It costs 8 min per stop, plus 20 min fill and 10 min travel whenever a new load is needed.
+- **Water cap:** deliveries are capped by plant storage plus that day's production.
+- **Missed homes:** homes due that day but not reached are listed, and the truck time they needed becomes the extra-hours recommendation.
+- **Tests:** run `npm test`. They check that trucks stay within shifts, the plant water cap holds, homes are pulled ahead of storms, deliver-by skips no-service days, and no home is served more than it needs.
+
+**Plant sample data (badged in the UI):**
+- **Homes:** 420 generated homes (household sizes 1–9, tanks 1,600–2,270 L, 4 routes) and 12 generated requests. Only House 214, the household app, is live.
+- **Fleet:** trucks W-1 to W-5 on 10-hour shifts (W-4 carries 11,000 L, the rest 9,000 L), and W-6 in maintenance. Deliveries run Monday to Saturday.
+- **Plant:** produces 240,000 L a day, with 600,000 L of storage (420,000 L now).
 - **Sewage tank:** tracked alongside the water tank, because a full sewage tank stops all water use in the house.
 
 To demo both sides, open Settings → **Open the water plant view**. The two tabs sync. Use **Skip ahead 12 hours** to watch the tank drain and the automatic request fire.
