@@ -1,4 +1,4 @@
-import { Minus, Plus, RotateCcw } from 'lucide-react'
+import { ExternalLink, FastForward, RotateCcw } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Segmented } from '../components/ui/segmented'
@@ -6,8 +6,11 @@ import { Switch } from '../components/ui/switch'
 import { fmtNum } from '../lib/format'
 import { LANG_LABEL, type Lang } from '../lib/i18n'
 import { useStore, type TextSize, type Theme } from '../lib/store'
+import { demoStormStart } from '../lib/weather'
+import { NeedsPicker, PeopleStepper } from './Welcome'
 
 const TANK_SIZES = [1100, 1500, 1800, 2300]
+const SEWAGE_SIZES = [1500, 2300, 3000]
 
 export function Settings() {
   const s = useStore()
@@ -20,7 +23,7 @@ export function Settings() {
 
       <Card>
         <CardContent className="space-y-6 pt-5">
-          <Group label={t('settings.language')} id="lang">
+          <Group label={t('settings.language')}>
             <Segmented<Lang>
               name="lang"
               label={t('settings.language')}
@@ -29,7 +32,7 @@ export function Settings() {
               options={(['iu', 'en', 'fr'] as Lang[]).map((l) => ({ value: l, label: LANG_LABEL[l], lang: l === 'iu' ? 'iu-Cans' : l }))}
             />
           </Group>
-          <Group label={t('settings.textSize')} id="text">
+          <Group label={t('settings.textSize')}>
             <Segmented<TextSize>
               name="text"
               label={t('settings.textSize')}
@@ -42,7 +45,7 @@ export function Settings() {
               ]}
             />
           </Group>
-          <Group label={t('settings.theme')} id="theme">
+          <Group label={t('settings.theme')}>
             <Segmented<Theme>
               name="theme"
               label={t('settings.theme')}
@@ -64,28 +67,36 @@ export function Settings() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <p id="people-label" className="font-semibold">
-              {t('settings.people')}
-            </p>
-            <div className="mt-2 flex items-center gap-4" role="group" aria-labelledby="people-label">
-              <Button variant="outline" size="icon" onClick={() => s.setData({ people: Math.max(1, s.people - 1) })} aria-label={t('settings.fewer')}>
-                <Minus />
-              </Button>
-              <output className="min-w-12 text-center text-4xl font-bold tabular-nums" aria-live="polite">
-                {s.people}
-              </output>
-              <Button variant="outline" size="icon" onClick={() => s.setData({ people: Math.min(20, s.people + 1) })} aria-label={t('settings.more')}>
-                <Plus />
-              </Button>
-            </div>
+            <label htmlFor="house-settings" className="font-semibold">
+              {t('settings.house')}
+            </label>
+            <input
+              id="house-settings"
+              inputMode="numeric"
+              autoComplete="off"
+              value={s.house}
+              onChange={(e) => s.setData({ house: e.target.value.slice(0, 6) })}
+              className="mt-2 block min-h-12 w-full rounded-lg border-2 bg-card px-4 text-lg font-semibold tabular-nums"
+            />
           </div>
-          <Group label={t('settings.tank')} id="tank">
+          <PeopleStepper />
+          <NeedsPicker legend={t('settings.needs')} hint={t('welcome.needsHint')} />
+          <Group label={t('settings.tank')}>
             <Segmented
               name="tank"
               label={t('settings.tank')}
               value={String(s.tankL)}
               onChange={(v) => s.setData({ tankL: Number(v) })}
               options={TANK_SIZES.map((l) => ({ value: String(l), label: `${fmtNum(l, locale)} L` }))}
+            />
+          </Group>
+          <Group label={t('settings.sewage')}>
+            <Segmented
+              name="sewage"
+              label={t('settings.sewage')}
+              value={String(s.sewageL)}
+              onChange={(v) => s.setData({ sewageL: Number(v) })}
+              options={SEWAGE_SIZES.map((l) => ({ value: String(l), label: `${fmtNum(l, locale)} L` }))}
             />
           </Group>
           <div>
@@ -108,10 +119,33 @@ export function Settings() {
           <CardTitle id="demo-settings">{t('settings.demo')}</CardTitle>
           <CardDescription>{t('settings.demoBody')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <Switch label={t('settings.demoStorm')} checked={s.demoStorm} onChange={(v) => s.setData({ demoStorm: v })} onText={t('on')} offText={t('off')} />
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="outline" onClick={() => s.skipAhead(12)}>
+              <FastForward /> {t('settings.skip')}
+            </Button>
+            {s.demoOffsetH > 0 && <p className="text-sm text-muted-foreground">{t('settings.skipped', { n: s.demoOffsetH })}</p>}
+          </div>
+          <Switch
+            label={t('settings.demoStorm')}
+            checked={!!s.demoStorm}
+            onChange={(v) => s.setData({ demoStorm: v ? demoStormStart(s.now) : null })}
+            onText={t('on')}
+            offText={t('off')}
+          />
           <Switch label={t('settings.demoAdvisory')} checked={s.demoAdvisory} onChange={(v) => s.setData({ demoAdvisory: v })} onText={t('on')} offText={t('off')} />
-          <Button variant="outline" onClick={s.reset} className="mt-2">
+          <div className="rounded-lg bg-muted p-4">
+            <a
+              href="#plant"
+              target="_blank"
+              rel="noopener"
+              className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-border bg-card px-5 font-semibold hover:bg-background"
+            >
+              <ExternalLink aria-hidden="true" className="size-5" /> {t('settings.plant')}
+            </a>
+            <p className="mt-2 text-sm text-muted-foreground">{t('settings.plantBody')}</p>
+          </div>
+          <Button variant="ghost" onClick={s.reset}>
             <RotateCcw /> {t('settings.reset')}
           </Button>
         </CardContent>
@@ -129,10 +163,10 @@ export function Settings() {
   )
 }
 
-function Group({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
+function Group({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p id={`${id}-label`} className="mb-2 font-semibold" aria-hidden="true">
+      <p className="mb-2 font-semibold" aria-hidden="true">
         {label}
       </p>
       {children}

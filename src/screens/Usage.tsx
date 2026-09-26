@@ -54,7 +54,13 @@ export function Usage({ water }: { water: Water }) {
     overnight < avg * 0.01 ? t('insight.noLeak') : null,
     lows.length ? t('insight.lowEvents', { n: lows.length }) : null,
     t('insight.who', { l: fmtNum(avg / people, locale) }),
+    // Store price seen in Inukjuak: $76.29 for 24 × 500 mL (12 L) ≈ $6.36 a litre.
+    t('insight.bottled', { cost: fmtNum(people * 2 * (76.29 / 12), locale) }),
   ].filter(Boolean) as string[]
+
+  const { usedToday, typicalByNow } = water.fc
+  const todayDiff = typicalByNow > 0 ? Math.round(((usedToday - typicalByNow) / typicalByNow) * 100) : 0
+  const todayCmp = Math.abs(todayDiff) < 5 ? t('today.same') : todayDiff > 0 ? t('today.more', { pct: todayDiff }) : t('today.less', { pct: -todayDiff })
 
   const ChangeIcon = Math.abs(change) < 5 ? ArrowRight : change > 0 ? ArrowUpRight : ArrowDownRight
   const labelEvery = n > 14 ? 5 : n > 7 ? 2 : 1
@@ -73,6 +79,16 @@ export function Usage({ water }: { water: Water }) {
           />
         </div>
       </div>
+
+      <Card aria-labelledby="today-title" className="p-5">
+        <h2 id="today-title" className="text-sm font-medium text-muted-foreground">
+          {t('today.title')}
+        </h2>
+        <p className="mt-1 text-3xl font-bold tabular-nums">{t('today.used', { l: fmtNum(usedToday, locale) })}</p>
+        <p className="mt-1 font-semibold">
+          {todayCmp} · {t('today.typical', { l: fmtNum(typicalByNow, locale) })}
+        </p>
+      </Card>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label={t('usage.avgDay')} value={`${fmtNum(avg, locale)} L`} />

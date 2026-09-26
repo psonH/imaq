@@ -22,7 +22,7 @@ export function Check({ checks }: { checks: QualityCheck[] }) {
 
   const save = () => {
     if (!ready) return
-    const c: QualityCheck = { t: Date.now(), chlorine, clear, smellOk }
+    const c: QualityCheck = { t: now, chlorine, clear, smellOk }
     addCheck(c)
     setSaved(c)
     requestAnimationFrame(() => resultRef.current?.focus())

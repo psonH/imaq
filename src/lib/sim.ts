@@ -5,8 +5,8 @@
 export const HOUR = 3_600_000
 export const DAY = 24 * HOUR
 
-export type Reading = { t: number; level: number } // litres in the tank, hourly
-export type Household = { people: number; tankL: number }
+export type Reading = { t: number; level: number; sewage: number } // litres in each tank, hourly
+export type Household = { people: number; tankL: number; sewageL: number }
 
 // Share of a day's water used in each hour (sums to 1): quiet overnight,
 // morning and evening peaks.
@@ -44,34 +44,54 @@ export function startOfDay(t: number) {
 }
 
 /**
- * 30 days of hourly tank readings ending at `now`. Deterministic per hour, so the
- * demo is stable. Trucks deliver Mon–Sat 08:00–17:00 when the tank is low, except
- * on two past storm days (so the history shows what running low looks like). The
- * last delivery is pinned about 2.6 days ago so the demo opens with a half tank.
+ * Hourly water-tank and sewage-tank readings from 30 days before `anchor` up to
+ * `now`. Deterministic, so the demo is stable. Before the anchor, trucks visit
+ * Mon–Sat 08:00–17:00 when a tank needs it, except on past storm days (so the
+ * history shows what running low looks like). The last water delivery is pinned
+ * about 2.9 days before the anchor and the last pump-out about 4 days before, so
+ * the demo opens with a half-full tank. After that, only deliveries and pump-outs
+ * the plant actually marks as done (through the app) change the tanks.
  */
-export function generateReadings(h: Household, now: number, days = 30): Reading[] {
+export function generateReadings(
+  h: Household,
+  now: number,
+  opts: { anchor: number; deliveries?: number[]; pumpOuts?: number[] },
+  days = 30,
+): Reading[] {
   const end = startOfHour(now)
-  const start = startOfDay(end - days * DAY)
+  const anchor = startOfHour(opts.anchor)
+  const start = startOfDay(anchor - days * DAY)
   const rand = mulberry32(214)
-  const stormDays = new Set([startOfDay(end - 17 * DAY), startOfDay(end - 16 * DAY), startOfDay(end - 6 * DAY)])
-  const pinnedDelivery = startOfHour(end - 70 * HOUR)
+  const stormDays = new Set([startOfDay(anchor - 17 * DAY), startOfDay(anchor - 16 * DAY), startOfDay(anchor - 6 * DAY)])
+  const pinnedDelivery = startOfHour(anchor - 70 * HOUR)
+  const pinnedPump = startOfHour(anchor - 98 * HOUR)
+  const deliveries = new Set((opts.deliveries ?? []).map(startOfHour))
+  const pumpOuts = new Set((opts.pumpOuts ?? []).map(startOfHour))
   const daily = h.people * LITRES_PER_PERSON
 
   const out: Reading[] = []
   let level = h.tankL * 0.8
+  let sewage = h.sewageL * 0.3
   for (let t = start; t <= end; t += HOUR) {
     const d = new Date(t)
     const hr = d.getHours()
     const dow = d.getDay()
     const inWindow = dow !== 0 && hr >= 8 && hr <= 17
-    const recent = t > pinnedDelivery - DAY
     const storm = stormDays.has(startOfDay(t))
-    if (t === pinnedDelivery) level = h.tankL
-    else if (!recent && inWindow && !storm && level < h.tankL * 0.3 && rand() < 0.35) level = h.tankL
+    const history = t < pinnedDelivery - DAY
 
-    const use = daily * HOUR_PROFILE[hr] * WEEKDAY_FACTOR[dow] * (0.75 + rand() * 0.5)
-    level = Math.max(0, level - use)
-    out.push({ t, level: Math.round(level) })
+    if (t === pinnedDelivery || deliveries.has(t)) level = h.tankL
+    else if (history && inWindow && !storm && level < h.tankL * 0.3 && rand() < 0.35) level = h.tankL
+
+    if (t === pinnedPump || pumpOuts.has(t)) sewage = h.sewageL * 0.05
+    else if (t < pinnedPump - DAY && inWindow && !storm && sewage > h.sewageL * 0.7 && rand() < 0.35) sewage = h.sewageL * 0.05
+
+    // A full sewage tank stops all water use in the house.
+    const want = daily * HOUR_PROFILE[hr] * WEEKDAY_FACTOR[dow] * (0.75 + rand() * 0.5)
+    const use = sewage >= h.sewageL ? 0 : Math.min(level, want)
+    level -= use
+    sewage = Math.min(h.sewageL, sewage + use * 0.95)
+    out.push({ t, level: Math.round(level), sewage: Math.round(sewage) })
   }
   return out
 }
@@ -138,33 +158,44 @@ export function lowEvents(readings: Reading[], tankL: number) {
  * hour with the household's own hour + weekday shape to estimate when the tank
  * runs dry.
  */
-export function forecast(readings: Reading[], now: number) {
+export function forecast(readings: Reading[], now: number, sewageL: number) {
   const days = dailyUse(readings)
   const today = startOfDay(now)
   const complete = days.filter((d) => d.day < today).slice(-7)
   const expectedDaily = complete.reduce((a, d) => a + d.litres, 0) / Math.max(1, complete.length)
   const avgWeekday = WEEKDAY_FACTOR.reduce((a, b) => a + b, 0) / 7
 
-  const level = readings[readings.length - 1].level
-  let left = level
-  let t = startOfHour(now)
-  let hours = 0
-  while (left > 0 && hours < 24 * 21) {
-    t += HOUR
-    const d = new Date(t)
-    left -= expectedDaily * HOUR_PROFILE[d.getHours()] * (WEEKDAY_FACTOR[d.getDay()] / avgWeekday)
-    hours++
+  // Hours until `litres` are used up at the household's usual hourly pace.
+  const project = (litres: number, factor: number) => {
+    let left = litres
+    let t = startOfHour(now)
+    let hours = 0
+    while (left > 0 && hours < 24 * 21) {
+      t += HOUR
+      const d = new Date(t)
+      left -= expectedDaily * factor * HOUR_PROFILE[d.getHours()] * (WEEKDAY_FACTOR[d.getDay()] / avgWeekday)
+      hours++
+    }
+    return { at: left <= 0 ? t : null, days: hours / 24 }
   }
+
+  const last = readings[readings.length - 1]
+  const water = project(last.level, 1)
+  const sewage = project(sewageL - last.sewage, 0.95)
   // Water expected to be used between now and the end of today, at the usual pace.
   const usedToday = days.find((d) => d.day === today)?.litres ?? 0
   const hourNow = new Date(now).getHours()
   const typicalByNow = expectedDaily * HOUR_PROFILE.slice(0, hourNow + 1).reduce((a, b) => a + b, 0)
 
   return {
-    level,
+    level: last.level,
+    sewage: last.sewage,
     expectedDaily,
-    emptyAt: left <= 0 ? t : null,
-    daysLeft: hours / 24,
+    emptyAt: water.at,
+    daysLeft: water.days,
+    sewageFullAt: sewage.at,
+    sewageDaysLeft: sewage.days,
+    sewageFull: last.sewage >= sewageL,
     usedToday,
     typicalByNow,
   }

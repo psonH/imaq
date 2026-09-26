@@ -71,8 +71,12 @@ export async function loadWeather(): Promise<WeatherState> {
   }
 }
 
-/** Demo storm: starts in 6 hours and lasts 54 hours, like a long Hudson Bay blizzard. */
-export function demoStorm(now: number): StormWindow {
-  const start = Math.ceil((now + 6 * HOUR) / HOUR) * HOUR
+/** Demo storm lasting 54 hours, like a long Hudson Bay blizzard. */
+export function demoStorm(start: number): StormWindow {
   return { start, end: start + 54 * HOUR, maxGust: 85 }
+}
+
+/** When the demo storm is switched on, it starts 6 hours from now. */
+export function demoStormStart(now: number) {
+  return Math.ceil((now + 6 * HOUR) / HOUR) * HOUR
 }
