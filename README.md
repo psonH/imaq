@@ -10,6 +10,8 @@ When the live Open-Meteo forecast shows a blizzard, the app works out how much w
 
 Built at Hack for Humanity Ottawa 2026 for the "Designing for the North" challenge.
 
+**Live app:** https://imaq-sooty.vercel.app
+
 ## Accessibility
 
 - **Languages:** English, French and Inuttitut syllabics. The Inuttitut is a draft; any string without a reviewed translation falls back to English, so there are no machine guesses.
