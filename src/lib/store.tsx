@@ -4,17 +4,14 @@ import { seedChecks, type QualityCheck } from './quality'
 import { isOpen, MY_HOUSE_DEFAULT, newId, seedOtherRequests, type Need, type Req, type ReqStatus } from './requests'
 import { DAY, HOUR } from './sim'
 
-export type Theme = 'light' | 'dark' | 'auto'
 export type TextSize = 'md' | 'lg' | 'xl'
 
-type Prefs = { v: 2; lang: Lang; theme: Theme; textSize: TextSize; onboarded: boolean; notify: boolean }
+type Prefs = { v: 2; lang: Lang; textSize: TextSize; onboarded: boolean; notify: boolean }
 
-const DEFAULT_PREFS: Prefs = { v: 2, lang: 'en', theme: 'light', textSize: 'md', onboarded: false, notify: false }
+const DEFAULT_PREFS: Prefs = { v: 2, lang: 'en', textSize: 'md', onboarded: false, notify: false }
 
-// Light is the default. Prefs saved before v2 defaulted to "match phone", so move them to light once.
 function readPrefs(): Prefs {
-  const p = read<Prefs>(PREFS_KEY, DEFAULT_PREFS)
-  return p.v === 2 ? p : { ...p, v: 2, theme: 'light' }
+  return read<Prefs>(PREFS_KEY, DEFAULT_PREFS)
 }
 
 type Data = {
@@ -141,8 +138,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement
     root.lang = HTML_LANG[prefs.lang]
     root.dataset.text = prefs.textSize
-    const dark = prefs.theme === 'dark' || (prefs.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
-    root.classList.toggle('dark', dark)
   }, [prefs])
 
   useEffect(() => write(DATA_KEY, data), [data])

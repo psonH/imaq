@@ -64,7 +64,6 @@ export function evaluate(
     else if (last.chlorine > CHLORINE.max) found.push({ s: 'check', r: 'highChlorine' })
     if (!last.clear) found.push({ s: 'unsafe', r: 'cloudy' })
     if (!last.smellOk) found.push({ s: 'check', r: 'smell' })
-    if (opts.now - last.t > CHECK_DUE_DAYS * 86_400_000) found.push({ s: 'check', r: 'checkDue' })
   }
 
   if (opts.lastTankClean !== null && opts.now - opts.lastTankClean > TANK_CLEAN_DAYS * 86_400_000) {

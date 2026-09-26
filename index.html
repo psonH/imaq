@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Imaq · Household water</title>
     <meta name="description" content="Know your household water: quality, how much is left, and how your home uses it." />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,12 +15,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Canadian+Aboriginal:wght@400;600;700&display=swap" rel="stylesheet" />
     <link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700&display=swap" rel="stylesheet" />
     <script>
-      // Apply saved theme + text size before paint (no flash).
+      // Apply saved text size and language before paint (no flash).
       try {
         var s = JSON.parse(localStorage.getItem('imaq:prefs') || '{}');
-        // Light is the default; dark only when chosen (or "match phone" on a dark phone).
-        var dark = s.v === 2 && (s.theme === 'dark' || (s.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches));
-        if (dark) document.documentElement.classList.add('dark');
         if (s.textSize) document.documentElement.dataset.text = s.textSize;
         if (s.lang) document.documentElement.lang = s.lang === 'iu' ? 'iu-Cans' : s.lang;
       } catch (e) {}

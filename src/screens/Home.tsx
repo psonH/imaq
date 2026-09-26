@@ -16,7 +16,7 @@ import type { useWater } from '../lib/useWater'
 import type { WeatherState } from '../lib/weather'
 
 type Water = ReturnType<typeof useWater>
-type Go = (tab: 'check' | 'deliveries' | 'usage') => void
+type Go = (tab: 'deliveries' | 'usage') => void
 type Tone = WaterStatus | 'neutral'
 
 const SKY_ICON = { clear: Sun, cloudy: Cloud, fog: CloudFog, rain: CloudRain, snow: CloudSnow, storm: CloudLightning }
@@ -39,7 +39,7 @@ export function Home({ water, weather, go }: { water: Water; weather: WeatherSta
       )}
       <div className="grid gap-4 md:grid-cols-2">
         <WaterLevelCard water={water} />
-        <ContaminationCard water={water} go={go} />
+        <ContaminationCard water={water} />
       </div>
       {(water.openWater || water.openSewage) && (
         <div className="grid gap-4 md:grid-cols-2">
@@ -62,12 +62,14 @@ const TONE: Record<Tone, string> = {
 function Pill({ tone, icon, label, value, onClick }: { tone: Tone; icon?: React.ReactNode; label: string; value: string; onClick?: () => void }) {
   const body = (
     <>
-      {icon ?? (tone === 'neutral' ? null : <StatusIcon status={tone} className="size-5 shrink-0" />)}
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-bold">{value}</span>
+      <span className="shrink-0 [&_svg]:size-7">{icon ?? (tone === 'neutral' ? null : <StatusIcon status={tone} className="size-7" />)}</span>
+      <span className="min-w-0 text-left leading-tight">
+        <span className="block text-sm text-muted-foreground">{label}</span>
+        <span className="block text-lg font-bold">{value}</span>
+      </span>
     </>
   )
-  const cls = cn('inline-flex min-h-12 items-center gap-2 rounded-full border-2 px-4 text-sm sm:text-base', TONE[tone])
+  const cls = cn('flex h-full min-h-16 w-full items-center gap-3 rounded-full border-2 px-5 py-2', TONE[tone])
   return (
     <li>
       {onClick ? (
@@ -156,8 +158,8 @@ function Summary({ water, weather, go }: { water: Water; weather: WeatherState; 
           </Button>
         )}
       </div>
-      <ul className="flex flex-wrap gap-2" aria-live="polite">
-        <Pill tone={quality.status} label={t('pill.quality')} value={t(`status.${quality.status}`)} onClick={() => go('check')} />
+      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-live="polite">
+        <Pill tone={quality.status} label={t('pill.quality')} value={t(`status.${quality.status}`)} />
         <Pill tone={levelTone} label={t('pill.level')} value={levelValue} onClick={() => go('usage')} />
         <Pill
           tone={dispatchTone}
@@ -216,7 +218,7 @@ function WaterLevelCard({ water }: { water: Water }) {
   )
 }
 
-function ContaminationCard({ water, go }: { water: Water; go: Go }) {
+function ContaminationCard({ water }: { water: Water }) {
   const { t, locale, now } = useStore()
   const { status, reasons } = water.quality
   const last = water.lastCheck
@@ -265,9 +267,6 @@ function ContaminationCard({ water, go }: { water: Water; go: Go }) {
         <p className="text-sm">{reason}</p>
         <div className="flex flex-wrap items-center justify-between gap-2">
           {last && <p className="text-xs text-muted-foreground">{t('lastChecked', { date: fmtDateTime(last.t, locale) })}</p>}
-          <Button variant="outline" onClick={() => go('check')}>
-            <Droplets /> {t('testWater')}
-          </Button>
         </div>
       </CardContent>
     </Card>

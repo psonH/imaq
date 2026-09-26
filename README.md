@@ -2,7 +2,7 @@
 
 Imaq helps a household in Inukjuak, Nunavik, know three things about its trucked water:
 
-- **Is it safe to drink?** A 3-step chlorine test-strip check gives a clear result: *Safe to drink*, *Check your water* or *Don't drink*.
+- **Is it safe to drink?** The contamination level (free chlorine against the safe range) gives a clear result: *Safe to drink*, *Check your water* or *Don't drink*.
 - **How long will it last?** The tank level is shown as *days of water left*, forecast from the household's own usage pattern.
 - **How do we use it?** A daily usage chart, plus plain-language insights such as the busiest day, peak hours, a leak check and how often the tank ran low.
 
@@ -30,7 +30,7 @@ Built at Hack for Humanity Ottawa 2026 for the "Designing for the North" challen
 - **Languages:** English, French and Inuttitut syllabics. The Inuttitut is a draft; any string without a reviewed translation falls back to English, so there are no machine guesses.
 - **Status is never colour alone:** each state has its own shape (circle = safe, triangle = check, octagon = stop) plus text.
 - **Listen button:** reads the water status aloud in English and French. Inuttitut needs recorded voices.
-- **Display:** three text sizes, light and dark themes, touch targets of at least 48 px, and a skip link.
+- **Display:** three text sizes, a light theme, touch targets of at least 48 px, and a skip link.
 - **Screen readers:** every control has a name, and each chart has a data-table view.
 - **First run:** a two-step welcome with big language buttons, each showing the language in its own script.
 - **Offline:** the app is an installable web app that works offline. It is about 100 KB gzipped.

@@ -8,7 +8,6 @@ import { useStore } from './lib/store'
 import { useAutoRequests } from './lib/useAutoRequests'
 import { useWater } from './lib/useWater'
 import { loadWeather, type WeatherState } from './lib/weather'
-import { Check } from './screens/Check'
 import { Deliveries } from './screens/Deliveries'
 import { Home } from './screens/Home'
 import { Plant } from './screens/Plant'
@@ -16,17 +15,16 @@ import { Settings } from './screens/Settings'
 import { Usage } from './screens/Usage'
 import { Welcome } from './screens/Welcome'
 
-type Tab = 'home' | 'check' | 'deliveries' | 'usage' | 'settings' | 'plant'
+type Tab = 'home' | 'deliveries' | 'usage' | 'settings' | 'plant'
 type Water = ReturnType<typeof useWater>
 
 const TABS: { id: Exclude<Tab, 'plant'>; icon: typeof HomeIcon; label: Key }[] = [
   { id: 'home', icon: HomeIcon, label: 'nav.home' },
-  { id: 'check', icon: Droplets, label: 'nav.check' },
   { id: 'deliveries', icon: Truck, label: 'nav.deliveries' },
   { id: 'usage', icon: BarChart3, label: 'nav.usage' },
   { id: 'settings', icon: SettingsIcon, label: 'nav.settings' },
 ]
-const ALL: Tab[] = ['home', 'check', 'deliveries', 'usage', 'settings', 'plant']
+const ALL: Tab[] = ['home', 'deliveries', 'usage', 'settings', 'plant']
 
 function tabFromHash(): Tab {
   const h = location.hash.slice(1) as Tab
@@ -51,7 +49,7 @@ export default function App() {
     return () => clearInterval(id)
   }, [s.online])
 
-  // Deep links (#check, #plant…) work for demos and shared links.
+  // Deep links (#usage, #plant…) work for demos and shared links.
   useEffect(() => {
     const onHash = () => setTab(tabFromHash())
     addEventListener('hashchange', onHash)
@@ -116,7 +114,6 @@ export default function App() {
         <main id="main" tabIndex={-1} className={cn('mx-auto w-full max-w-6xl px-4 pt-4 outline-none lg:px-8 lg:pt-8', plant ? 'pb-10' : 'pb-28 lg:pb-10')}>
           {banners}
           {tab === 'home' && <Home water={water} weather={weather} go={setTab} />}
-          {tab === 'check' && <Check checks={water.checks} />}
           {tab === 'deliveries' && <Deliveries water={water} />}
           {tab === 'usage' && <Usage water={water} />}
           {tab === 'settings' && <Settings />}
@@ -126,7 +123,7 @@ export default function App() {
 
       {!plant && (
         <nav aria-label="Imaq" className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          <div className="mx-auto grid max-w-2xl grid-cols-5">
+          <div className="mx-auto grid max-w-2xl grid-cols-4">
             {TABS.map((x) => {
               const Icon = x.icon
               const active = tab === x.id

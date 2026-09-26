@@ -5,7 +5,7 @@ import { Segmented } from '../components/ui/segmented'
 import { Switch } from '../components/ui/switch'
 import { fmtNum } from '../lib/format'
 import { LANG_LABEL, type Lang } from '../lib/i18n'
-import { useStore, type TextSize, type Theme } from '../lib/store'
+import { useStore, type TextSize } from '../lib/store'
 import { demoStormStart } from '../lib/weather'
 import { NeedsPicker, PeopleStepper } from './Welcome'
 
@@ -42,19 +42,6 @@ export function Settings() {
                 { value: 'md', label: 'A', ariaLabel: t('settings.textNormal') },
                 { value: 'lg', label: 'A+', ariaLabel: t('settings.textLarge') },
                 { value: 'xl', label: 'A++', ariaLabel: t('settings.textLargest') },
-              ]}
-            />
-          </Group>
-          <Group label={t('settings.theme')}>
-            <Segmented<Theme>
-              name="theme"
-              label={t('settings.theme')}
-              value={s.theme}
-              onChange={(theme) => s.setPrefs({ theme })}
-              options={[
-                { value: 'light', label: t('settings.light') },
-                { value: 'dark', label: t('settings.dark') },
-                { value: 'auto', label: t('settings.auto') },
               ]}
             />
           </Group>

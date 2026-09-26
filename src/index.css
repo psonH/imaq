@@ -2,12 +2,10 @@
 
 /*
  * Theme tokens, following the 2one DLS contract: grayscale structure, one brand
- * accent (2one Blue, APCA-safe steps #1670c9 light / #7cc4ff dark), a solid
- * destructive, light + dark. Components use these through Tailwind utilities
+ * accent (2one Blue, APCA-safe #1670c9), a solid
+ * destructive, and success/warning for status. Light theme only. Components use these through Tailwind utilities
  * only — no hex in components.
  */
-@custom-variant dark (&:where(.dark, .dark *));
-
 :root {
   --background: #ffffff;
   --foreground: #09090b;
@@ -31,30 +29,6 @@
   --warning: #a16207;
   --warning-foreground: #ffffff;
   --radius: 0.75rem;
-}
-
-.dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #141417;
-  --card-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #c2c2c8;
-  --border: #606069;
-  --input: #606069;
-  --ring: #7cc4ff;
-  --primary: #fafafa;
-  --primary-foreground: #09090b;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --brand: #7cc4ff;
-  --brand-foreground: #09090b;
-  --destructive: #fecaca;
-  --destructive-foreground: #09090b;
-  --success: #86efac;
-  --success-foreground: #09090b;
-  --warning: #fcd34d;
-  --warning-foreground: #09090b;
 }
 
 @theme inline {
