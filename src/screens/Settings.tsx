@@ -138,6 +138,18 @@ export function Settings() {
         </CardContent>
       </Card>
 
+      <Card aria-labelledby="fresh-title">
+        <CardHeader>
+          <CardTitle id="fresh-title">{t('settings.fresh')}</CardTitle>
+          <CardDescription>{t('settings.freshBody')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" onClick={startFresh}>
+            <RotateCcw /> {t('settings.freshButton')}
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card aria-labelledby="about">
         <CardHeader>
           <CardTitle id="about">{t('settings.about')}</CardTitle>
@@ -148,6 +160,19 @@ export function Settings() {
       </Card>
     </div>
   )
+}
+
+// Wipe everything the app saved in this browser and reopen at the welcome screen,
+// as if installed for the first time.
+function startFresh() {
+  if (!confirm(document.documentElement.lang === 'fr' ? 'Effacer toutes les données et recommencer?' : 'Erase all app data and start fresh?')) return
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('imaq:'))
+      .forEach((k) => localStorage.removeItem(k))
+  } catch {}
+  location.hash = '#home'
+  location.reload()
 }
 
 function Group({ label, children }: { label: string; children: React.ReactNode }) {

@@ -135,6 +135,9 @@ const en = {
   'settings.demoStorm': 'Simulate a blizzard',
   'settings.demoAdvisory': 'Boil-water advisory',
   'settings.reset': 'Reset demo data',
+  'settings.fresh': 'Start fresh',
+  'settings.freshBody': 'Erase everything this app saved on this device, including requests and settings, and start again from the welcome screen.',
+  'settings.freshButton': 'Reset app',
   'settings.about': 'About this prototype',
   'settings.aboutBody':
     'Chlorine limits (0.2 to 4 mg/L) need confirmation by the Inukjuak water plant. Weather comes from Open-Meteo. Inuttitut text is a draft for community review. Your data stays on this phone.',
@@ -435,6 +438,9 @@ const fr: Record<Key, string> = {
   'settings.demoStorm': 'Simuler un blizzard',
   'settings.demoAdvisory': "Avis d'ébullition",
   'settings.reset': 'Réinitialiser la démo',
+  'settings.fresh': 'Recommencer à neuf',
+  'settings.freshBody': "Efface tout ce que l'application a enregistré sur cet appareil, y compris les demandes et les réglages, et recommence à l'écran d'accueil.",
+  'settings.freshButton': "Réinitialiser l'application",
   'settings.about': 'À propos de ce prototype',
   'settings.aboutBody':
     "Les limites de chlore (0,2 à 4 mg/L) doivent être confirmées par l'usine d'Inukjuak. La météo vient d'Open-Meteo. Le texte en inuttitut est une ébauche à faire réviser par la communauté. Vos données restent sur ce téléphone.",
