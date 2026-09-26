@@ -52,6 +52,9 @@ export function PlantRequests({ data }: { data: PlanData }) {
   const [filter, setFilter] = useState<'open' | 'delivered'>('open')
   const [adding, setAdding] = useState(false)
   const [cancelling, setCancelling] = useState<Req | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [truckId, setTruckId] = useState('')
+  const [dispatched, setDispatched] = useState<{ truck: string; n: number } | null>(null)
 
   const rows = useMemo(() => {
     const homeByHouse = new Map(data.homes.map((h) => [h.house, h]))
@@ -106,6 +109,23 @@ export function PlantRequests({ data }: { data: PlanData }) {
         />
       </div>
 
+      {filter === 'open' && (
+        <DispatchBar
+          rows={rows.filter((x) => selected.has(x.r.id))}
+          trucks={data.trucks.filter((tr) => tr.inService)}
+          truckId={truckId}
+          setTruckId={setTruckId}
+          dispatched={dispatched}
+          onClear={() => setSelected(new Set())}
+          onDispatch={(truck) => {
+            const ids = [...selected]
+            ids.forEach((id) => s.setRequestStatus(id, 'onTheWay', Math.ceil((now + HOUR) / HOUR) * HOUR, truck))
+            setDispatched({ truck, n: ids.length })
+            setSelected(new Set())
+          }}
+        />
+      )}
+
       <Card className="overflow-x-auto">
         {rows.length === 0 ? (
           <p className="p-6 text-muted-foreground">{t('pr.empty')}</p>
@@ -113,6 +133,17 @@ export function PlantRequests({ data }: { data: PlanData }) {
           <table className="w-full min-w-[48rem] text-left">
             <thead>
               <tr className="border-b text-sm text-muted-foreground">
+                {filter === 'open' && (
+                  <th scope="col" className="w-12 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      className="size-5 accent-current"
+                      aria-label={t('pr.selectAll')}
+                      checked={rows.length > 0 && rows.every((x) => selected.has(x.r.id))}
+                      onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((x) => x.r.id)) : new Set())}
+                    />
+                  </th>
+                )}
                 <th scope="col" className="px-4 py-3 font-semibold">{t('pr.house')}</th>
                 <th scope="col" className="px-4 py-3 font-semibold">{t('pr.requested')}</th>
                 <th scope="col" className="px-4 py-3 text-right font-semibold">{t('pr.left')}</th>
@@ -126,7 +157,23 @@ export function PlantRequests({ data }: { data: PlanData }) {
                 const source = r.house === s.house ? 'app' : (r.source ?? 'app')
                 const SrcIcon = SOURCE_ICON[source]
                 return (
-                  <tr key={r.id} className="border-b last:border-0">
+                  <tr key={r.id} className={cn('border-b last:border-0', selected.has(r.id) && 'bg-muted')}>
+                    {filter === 'open' && (
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="size-5 accent-current"
+                          aria-label={t('pr.select', { house: r.house })}
+                          checked={selected.has(r.id)}
+                          onChange={(e) => {
+                            const next = new Set(selected)
+                            if (e.target.checked) next.add(r.id)
+                            else next.delete(r.id)
+                            setSelected(next)
+                          }}
+                        />
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-2 font-semibold tabular-nums">
                         <SrcIcon aria-hidden="true" className="size-4 text-muted-foreground" />
@@ -532,5 +579,71 @@ function AdviceItem({ a, dayName }: { a: Advice; dayName: (i: number) => string 
     <li className="flex items-start gap-2">
       <Icon aria-hidden="true" className={cn('mt-0.5 size-5 shrink-0', a.kind === 'maintenance' ? 'text-muted-foreground' : 'text-warning')} /> {text}
     </li>
+  )
+}
+
+type Row = { r: Req; left?: number; capacity?: number }
+
+// Bulk action for selected requests: pick a truck, see if the water fits, dispatch.
+function DispatchBar({
+  rows,
+  trucks,
+  truckId,
+  setTruckId,
+  dispatched,
+  onClear,
+  onDispatch,
+}: {
+  rows: Row[]
+  trucks: PlanData['trucks']
+  truckId: string
+  setTruckId: (id: string) => void
+  dispatched: { truck: string; n: number } | null
+  onClear: () => void
+  onDispatch: (truck: string) => void
+}) {
+  const { t, locale } = useStore()
+  const truck = trucks.find((tr) => tr.id === truckId) ?? trucks[0]
+  const litres = rows.reduce((sum, x) => sum + (x.capacity !== undefined && x.left !== undefined ? Math.max(0, x.capacity - x.left) : 0), 0)
+  const loads = truck ? Math.max(1, Math.ceil(litres / truck.capacity)) : 0
+
+  if (!rows.length)
+    return dispatched ? (
+      <p role="status" className="flex items-center gap-2 font-semibold">
+        <Truck aria-hidden="true" className="size-5 text-brand" /> {t('pr.dispatched', { truck: dispatched.truck, n: dispatched.n })}
+      </p>
+    ) : (
+      <p className="text-sm text-muted-foreground">{t('pr.selectHint')}</p>
+    )
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border-2 border-foreground bg-card p-3" role="region" aria-label={t('pr.dispatch')}>
+      <p className="font-bold tabular-nums">{t('pr.selected', { n: rows.length })}</p>
+      <p className="text-sm tabular-nums text-muted-foreground">{t('pr.needs', { litres: fmtNum(litres, locale), n: loads })}</p>
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        <label htmlFor="dispatch-truck" className="text-sm font-semibold">
+          {t('pr.truck')}
+        </label>
+        <select
+          id="dispatch-truck"
+          value={truck?.id ?? ''}
+          onChange={(e) => setTruckId(e.target.value)}
+          className="min-h-11 rounded-lg border-2 bg-card px-3 text-base"
+          disabled={!trucks.length}
+        >
+          {trucks.map((tr) => (
+            <option key={tr.id} value={tr.id}>
+              {tr.id} · {fmtNum(tr.capacity, locale)} L
+            </option>
+          ))}
+        </select>
+        <Button variant="default" disabled={!truck} onClick={() => truck && onDispatch(truck.id)}>
+          <Truck /> {t('pr.dispatch')}
+        </Button>
+        <Button variant="ghost" onClick={onClear}>
+          {t('pr.clear')}
+        </Button>
+      </div>
+    </div>
   )
 }
