@@ -99,16 +99,18 @@ function Summary({ water, weather, go }: { water: Water; weather: WeatherState; 
           ? ['unsafe', t('pill.notRequested')]
           : ['neutral', t('news.normal')]
 
-  const weatherTone: Tone = storm ? (stormNow ? 'unsafe' : 'check') : weather.source === 'unavailable' && !s.demoStorm ? 'neutral' : 'safe'
+  const weatherTone: Tone = storm ? (stormNow ? 'unsafe' : 'check') : (weather.source === 'unavailable' || weather.source === 'loading') && !s.demoStorm ? 'neutral' : 'safe'
   const weatherValue = storm
     ? stormNow
       ? t('pill.stormNow')
       : t('pill.stormAt', { time: fmtDateTime(storm.start, locale) })
     : weather.current
       ? t('weather.status', { sky: t(`sky.${weather.current.sky}` as Key), temp: weather.current.tempC })
-      : weather.source === 'unavailable'
-        ? t('weather.unavailable')
-        : t('weather.none')
+      : weather.source === 'loading'
+        ? t('weather.checking')
+        : weather.source === 'unavailable'
+          ? t('weather.unavailable')
+          : t('weather.none')
 
   // Plain-language storm status: how much water a day lasts until trucks run again.
   let stormLine = ''

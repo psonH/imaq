@@ -15,7 +15,7 @@ export type WeatherState = {
   fetchedAt: number | null
   storm: StormWindow | null
   current: Current | null
-  source: 'live' | 'cached' | 'demo' | 'unavailable'
+  source: 'live' | 'cached' | 'demo' | 'unavailable' | 'loading'
 }
 
 // WMO weather codes (used by Open-Meteo) grouped into a few plain words.
@@ -59,6 +59,15 @@ export function findStorm(h: Hourly): StormWindow | null {
     }
   }
   return run && hours >= 4 ? run : null
+}
+
+// Last saved weather, shown instantly on open (and offline) until the live check returns.
+export function cachedWeather(): WeatherState {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null') as WeatherState | null
+    if (c) return { ...c, current: c.current ?? null, source: 'cached' }
+  } catch {}
+  return { fetchedAt: null, storm: null, current: null, source: 'loading' }
 }
 
 export async function loadWeather(): Promise<WeatherState> {

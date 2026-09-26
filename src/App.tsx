@@ -7,7 +7,7 @@ import { LANG_LABEL, LANG_SHORT, type Key, type Lang } from './lib/i18n'
 import { useStore } from './lib/store'
 import { useAutoRequests } from './lib/useAutoRequests'
 import { useWater } from './lib/useWater'
-import { loadWeather, type WeatherState } from './lib/weather'
+import { cachedWeather, loadWeather, type WeatherState } from './lib/weather'
 import { Deliveries } from './screens/Deliveries'
 import { Home } from './screens/Home'
 import { PlantPlan, PlantRequests } from './screens/Plant'
@@ -36,7 +36,7 @@ export default function App() {
   const s = useStore()
   const { t } = s
   const [tab, setTab] = useState<Tab>(tabFromHash)
-  const [weather, setWeather] = useState<WeatherState>({ fetchedAt: null, storm: null, current: null, source: 'unavailable' })
+  const [weather, setWeather] = useState<WeatherState>(cachedWeather)
   const water = useWater(weather)
   const plant = tab === 'plant'
   const [plantTab, setPlantTab] = useState<PlantTab>('requests')
