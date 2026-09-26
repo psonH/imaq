@@ -1,7 +1,7 @@
-import { ArrowRight, BarChart3, Droplets, ExternalLink, Home as HomeIcon, Settings as SettingsIcon, Truck, WifiOff } from 'lucide-react'
+import { BarChart3, Droplets, ExternalLink, Home as HomeIcon, Settings as SettingsIcon, Truck, WifiOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { StatusIcon, STATUS_STYLE } from './components/StatusIcon'
-import { Button } from './components/ui/button'
+import { StatusIcon } from './components/StatusIcon'
+import { RequestWater } from './components/RequestWater'
 import { cn } from './lib/cn'
 import { LANG_LABEL, LANG_SHORT, type Key, type Lang } from './lib/i18n'
 import { useStore } from './lib/store'
@@ -194,33 +194,11 @@ function LangSwitch() {
 function Sidebar({ tab, setTab, water }: { tab: Tab; setTab: (t: Tab) => void; water: Water }) {
   const s = useStore()
   const { t } = s
-  const open = water.openWater
-  const waiting = open?.status === 'queued' || open?.status === 'sent'
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col gap-6 border-r bg-card p-5 lg:flex" aria-label="Imaq">
       <Brand subtitle={`${t('app.tagline')} · ${t('plant.house', { n: s.house })}`} />
 
-      {open ? (
-        <div className={cn('space-y-2 rounded-xl border-2 p-4', STATUS_STYLE[waiting ? 'check' : 'safe'].ring, STATUS_STYLE[waiting ? 'check' : 'safe'].bg)}>
-          <p className="flex items-center gap-2 font-bold">
-            <StatusIcon status={waiting ? 'check' : 'safe'} className="size-5" />
-            {t('side.requested')}
-          </p>
-          <p className="text-sm">{t(`st.${open.status}` as Key)}</p>
-          <Button variant="ghost" className="-ml-3" onClick={() => setTab('deliveries')}>
-            {t('side.view')} <ArrowRight />
-          </Button>
-        </div>
-      ) : (
-        <Button
-          variant="brand"
-          size="lg"
-          className="w-full"
-          onClick={() => s.requestDelivery({ type: 'water', auto: false, reason: 'manual', daysLeft: water.fc.daysLeft })}
-        >
-          <Truck /> {t('side.request')}
-        </Button>
-      )}
+      <RequestWater water={water} />
 
       <nav aria-label="Imaq">
         <ul className="space-y-1">

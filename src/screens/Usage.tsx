@@ -80,6 +80,23 @@ export function Usage({ water }: { water: Water }) {
         </div>
       </div>
 
+      <Card aria-labelledby="insights-title">
+        <CardHeader className="flex-row items-center gap-3">
+          <Lightbulb aria-hidden="true" className="size-6 shrink-0 text-brand" />
+          <CardTitle id="insights-title">{t('usage.insights')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3">
+            {insights.map((s) => (
+              <li key={s} className="flex items-start gap-3">
+                <span className="mt-2 size-2 shrink-0 rounded-full bg-foreground" aria-hidden="true" />
+                {s}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
       <Card aria-labelledby="today-title" className="p-5">
         <h2 id="today-title" className="text-sm font-medium text-muted-foreground">
           {t('today.title')}
@@ -147,23 +164,6 @@ export function Usage({ water }: { water: Water }) {
         </CardContent>
       </Card>
 
-
-      <Card aria-labelledby="insights-title">
-        <CardHeader className="flex-row items-center gap-3">
-          <Lightbulb aria-hidden="true" className="size-6 shrink-0 text-brand" />
-          <CardTitle id="insights-title">{t('usage.insights')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-3">
-            {insights.map((s) => (
-              <li key={s} className="flex items-start gap-3">
-                <span className="mt-2 size-2 shrink-0 rounded-full bg-foreground" aria-hidden="true" />
-                {s}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
     </div>
   )
 }

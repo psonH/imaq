@@ -1,6 +1,7 @@
 import { Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, Droplets, Gauge, Sun, Truck, Volume2, VolumeX } from 'lucide-react'
 import { useState } from 'react'
 import { RequestCard } from '../components/RequestCard'
+import { RequestWater } from '../components/RequestWater'
 import { StatusIcon, STATUS_STYLE } from '../components/StatusIcon'
 import { TankGauge } from '../components/TankGauge'
 import { Button } from '../components/ui/button'
@@ -22,31 +23,16 @@ type Tone = WaterStatus | 'neutral'
 const SKY_ICON = { clear: Sun, cloudy: Cloud, fog: CloudFog, rain: CloudRain, snow: CloudSnow, storm: CloudLightning }
 
 export function Home({ water, weather, go }: { water: Water; weather: WeatherState; go: Go }) {
-  const s = useStore()
   return (
     <div className="space-y-4">
       <Summary water={water} weather={weather} go={go} />
-      {!water.openWater && (
-        // On phones the sidebar isn't there, so the request button lives here.
-        <Button
-          variant="brand"
-          size="lg"
-          className="w-full lg:hidden"
-          onClick={() => s.requestDelivery({ type: 'water', auto: false, reason: 'manual', daysLeft: water.fc.daysLeft })}
-        >
-          <Truck /> {s.t('side.request')}
-        </Button>
-      )}
+      {/* On phones the sidebar isn't there, so the request button and its status live here. */}
+      <RequestWater water={water} className="lg:hidden" />
       <div className="grid gap-4 md:grid-cols-2">
         <WaterLevelCard water={water} />
         <ContaminationCard water={water} />
       </div>
-      {(water.openWater || water.openSewage) && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {water.openWater && <RequestCard type="water" open={water.openWater} daysLeft={water.fc.daysLeft} />}
-          {water.openSewage && <RequestCard type="sewage" open={water.openSewage} daysLeft={water.fc.sewageDaysLeft} />}
-        </div>
-      )}
+      {water.openSewage && <RequestCard type="sewage" open={water.openSewage} daysLeft={water.fc.sewageDaysLeft} />}
     </div>
   )
 }
@@ -93,20 +79,26 @@ function Summary({ water, weather, go }: { water: Water; weather: WeatherState; 
   const levelTone: Tone = fc.daysLeft < 0.5 ? 'unsafe' : fc.daysLeft <= Math.max(2, s.alertDays) ? 'check' : 'safe'
   const levelValue = fc.level <= 0 ? t('glance.empty') : t('pill.levelValue', { p: pct, n: fmtNum(fc.daysLeft, locale, 1) })
 
-  const dispatchTone: Tone = openWater
-    ? openWater.status === 'scheduled' || openWater.status === 'onTheWay'
-      ? 'safe'
-      : 'check'
-    : fc.daysLeft <= s.alertDays
-      ? 'unsafe'
-      : 'neutral'
-  const dispatchValue = !openWater
-    ? t('pill.notRequested')
-    : openWater.status === 'scheduled' && openWater.eta
-      ? t('pill.bookedAt', { time: fmtDateTime(openWater.eta, locale) })
-      : t(`st.${openWater.status}` as Key)
-
+  // News from the water plant about this home's water: its latest update on an
+  // open request, a recent delivery, or how deliveries are running today.
   const stormNow = storm && storm.start <= now
+  const delivered = water.mine.find((r) => r.type === 'water' && r.status === 'delivered' && now - r.updatedAt < 12 * HOUR)
+  const [dispatchTone, dispatchValue]: [Tone, string] = openWater
+    ? openWater.status === 'queued'
+      ? ['check', t('news.queued')]
+      : openWater.status === 'sent'
+        ? ['check', t('news.received')]
+        : openWater.status === 'scheduled'
+          ? ['safe', t('news.booked', { time: openWater.eta ? fmtDateTime(openWater.eta, locale) : '' })]
+          : ['safe', t('news.onTheWay')]
+    : delivered
+      ? ['safe', t('news.delivered', { time: fmtDateTime(delivered.updatedAt, locale) })]
+      : stormNow
+        ? ['unsafe', t('news.paused')]
+        : fc.daysLeft <= s.alertDays
+          ? ['unsafe', t('pill.notRequested')]
+          : ['neutral', t('news.normal')]
+
   const weatherTone: Tone = storm ? (stormNow ? 'unsafe' : 'check') : weather.source === 'unavailable' && !s.demoStorm ? 'neutral' : 'safe'
   const weatherValue = storm
     ? stormNow
